@@ -38,6 +38,13 @@ async def get_current_user(token: str, db: Session):
         return None
 
 
+async def get_token_info(token: str, db: Session):
+    token_info = db.query(Token) \
+            .filter(Token.access_token == token) \
+            .first()
+    return token_info
+
+
 async def get_all_users(db: Session):
     return db.query(User.id,
                     User.email,

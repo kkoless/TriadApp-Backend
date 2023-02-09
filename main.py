@@ -10,7 +10,7 @@ app = FastAPI()
 Base.metadata.create_all(bind=engine)
 
 
-@app.get("/api/palette", dependencies=[Depends(JWTBearer())], tags=["Favorites"])
+@app.get("/api/palette", dependencies=[Depends(JWTBearer())], tags=["Palette"])
 async def get_palettes(cred=Depends(JWTBearer()), db=Depends(get_db)):
     user = await crud.get_current_user(cred, db)
     if user is None:
@@ -19,7 +19,7 @@ async def get_palettes(cred=Depends(JWTBearer()), db=Depends(get_db)):
     return await crud.get_palettes(db, user.id)
 
 
-@app.post("/api/palette/add", dependencies=[Depends(JWTBearer())], tags=["Favorites"])
+@app.post("/api/palette/add", dependencies=[Depends(JWTBearer())], tags=["Palette"])
 async def add_palette(palette_data: PaletteSchema,
                       cred=Depends(JWTBearer()),
                       db=Depends(get_db)):
@@ -28,7 +28,7 @@ async def add_palette(palette_data: PaletteSchema,
     return {"status": "palette added successfully"}
 
 
-@app.delete("/api/palette/delete", dependencies=[Depends(JWTBearer())], tags=["Favorites"])
+@app.delete("/api/palette/delete", dependencies=[Depends(JWTBearer())], tags=["Palette"])
 async def delete_palette(palette_data: PaletteSchema,
                          cred=Depends(JWTBearer()),
                          db=Depends(get_db)):
@@ -37,7 +37,7 @@ async def delete_palette(palette_data: PaletteSchema,
     return {"status": "palette deleted successfully"}
 
 
-@app.get("/api/color", dependencies=[Depends(JWTBearer())], tags=["Favorites"])
+@app.get("/api/color", dependencies=[Depends(JWTBearer())], tags=["Color"])
 async def get_colors(cred=Depends(JWTBearer()), db=Depends(get_db)):
     user = await crud.get_current_user(cred, db)
     if user is None:
@@ -49,7 +49,7 @@ async def get_colors(cred=Depends(JWTBearer()), db=Depends(get_db)):
     return colors
 
 
-@app.post("/api/color/add", dependencies=[Depends(JWTBearer())], tags=["Favorites"])
+@app.post("/api/color/add", dependencies=[Depends(JWTBearer())], tags=["Color"])
 async def add_color(color_data: ColorSchema,
                     cred=Depends(JWTBearer()),
                     db=Depends(get_db)):
@@ -58,7 +58,7 @@ async def add_color(color_data: ColorSchema,
     return {"status": "color added successfully"}
 
 
-@app.delete("/api/color/delete", dependencies=[Depends(JWTBearer())], tags=["Favorites"])
+@app.delete("/api/color/delete", dependencies=[Depends(JWTBearer())], tags=["Color"])
 async def delete_color(color_data: ColorSchema,
                        cred=Depends(JWTBearer()),
                        db=Depends(get_db)):
@@ -106,6 +106,18 @@ async def user_login(user: UserAuthSchema, db: Session = Depends(get_db)):
         return {"error": "Wrong login details!"}
     else:
         return response
+
+
+@app.get("/api/user", dependencies=[Depends(JWTBearer())], tags=["User"])
+async def get_current_user(db: Session = Depends(get_db), cred=Depends(JWTBearer())):
+    db_user = await crud.get_current_user(cred, db)
+    db_token = await crud.get_token_info(cred, db)
+
+    return UserDBResponse(
+            email=db_user.email,
+            role=db_user.role,
+            token_data=TokenData(db_token.access_token, db_token.expire_time)
+        )
 
 
 @app.get("/api/users", dependencies=[Depends(JWTBearer())], tags=["User"])

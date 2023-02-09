@@ -12,7 +12,7 @@ class User(Base):
 
 class Token(Base):
     __tablename__ = "tokens"
-    access_token = Column(Integer, primary_key=True, nullable=False)
+    access_token = Column(String, primary_key=True, nullable=False)
     expire_time = Column(Integer, nullable=False)
     user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
 
