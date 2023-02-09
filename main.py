@@ -90,13 +90,7 @@ async def create_user(user_data: UserAuthSchema, db: Session = Depends(get_db)):
 
     signedup_user = await crud.create_user(db, user_request)
 
-    response = UserDBResponse(
-        email=signedup_user.email,
-        role=signedup_user.role,
-        token_data=token_data
-    )
-
-    return response
+    return token_data
 
 
 @app.post("/api/user/login", tags=["User"])
