@@ -17,13 +17,7 @@ async def authenticate_user(data: UserAuthSchema, db: Session):
         expire_time=db_user.expire_time
     )
 
-    response = UserDBResponse(
-        email=db_user.email,
-        role=db_user.role,
-        token_data=token_data
-    )
-
-    return response
+    return token_data
 
 
 async def get_current_user(token: str, db: Session):

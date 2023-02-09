@@ -22,7 +22,7 @@ def get_password_hash(password):
 def token_response(token: str, expire_time):
     return {
         "access_token": token,
-        "expire_time": expire_time
+        "expire_time": str(expire_time)
     }
 
 

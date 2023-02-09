@@ -51,7 +51,7 @@ class UserAuthSchema(BaseModel):
 
 class TokenData:
     access_token: str
-    expire_time: int
+    expire_time: str
 
     def __init__(self, access_token, expire_time):
         self.access_token = access_token
