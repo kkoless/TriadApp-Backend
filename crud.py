@@ -109,23 +109,23 @@ async def get_palettes(db: Session, user_id: int):
 
         for color in db_colors:
             db_color = db.query(Color).filter(Color.id == color.color_id).first()
-            colors.append(ColorSchema(id=db_color.id, name=db_color.name, hex=db_color.hex))
+            colors.append(ColorResponse(name=db_color.name, hex=db_color.hex))
 
-        response.append(PaletteSchema(id=palette.palette_id, colors=colors))
+        response.append(PaletteResponse(colors=colors))
 
     return response
 
 
-async def delete_palette(db: Session, palette_data: PaletteSchema, user_id: int):
+async def delete_palette(db: Session, palette_id: int, user_id: int):
     db_user_palette = db.query(User_Palette) \
         .filter(User_Palette.user_id == user_id) \
-        .filter(User_Palette.palette_id == palette_data.id) \
+        .filter(User_Palette.palette_id == palette_id) \
         .first()
 
     if db_user_palette is not None:
         db.delete(db_user_palette)
         db_palettes_colors = db.query(Palette_Color)\
-            .filter(Palette_Color.palette_id == palette_data.id)\
+            .filter(Palette_Color.palette_id == palette_id)\
             .all()
 
         for colors in db_palettes_colors:
@@ -143,7 +143,9 @@ async def get_colors(db: Session, user_id: int):
         .filter(User_Color.user_id == user_id) \
         .all()
 
-    return db_colors
+    colors = list(map(lambda db_c: ColorResponse(name=db_c.name, hex=db_c.hex), db_colors))
+
+    return colors
 
 
 async def add_color(db: Session, color_data: ColorSchema, user_id: int):
@@ -175,9 +177,9 @@ async def add_color(db: Session, color_data: ColorSchema, user_id: int):
         return {"error": "This color already in use"}
 
 
-async def delete_color(db: Session, color_data: ColorSchema, user_id: str):
+async def delete_color(db: Session, color_id: int, user_id: str):
     color_for_delete = db.query(User_Color) \
-        .filter(User_Color.color_id == color_data.id) \
+        .filter(User_Color.color_id == color_id) \
         .filter(User_Color.user_id == user_id) \
         .first()
 

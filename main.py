@@ -10,7 +10,7 @@ app = FastAPI()
 Base.metadata.create_all(bind=engine)
 
 
-@app.get("/api/palette", dependencies=[Depends(JWTBearer())], tags=["Palette"])
+@app.get("/api/palettes", dependencies=[Depends(JWTBearer())], tags=["Palette"])
 async def get_palettes(cred=Depends(JWTBearer()), db=Depends(get_db)):
     user = await crud.get_current_user(cred, db)
     if user is None:
@@ -29,22 +29,21 @@ async def add_palette(palette_data: PaletteSchema,
 
 
 @app.delete("/api/palette/delete", dependencies=[Depends(JWTBearer())], tags=["Palette"])
-async def delete_palette(palette_data: PaletteSchema,
+async def delete_palette(id: int,
                          cred=Depends(JWTBearer()),
                          db=Depends(get_db)):
     user = await crud.get_current_user(cred, db)
-    await crud.delete_palette(db, palette_data, user.id)
+    await crud.delete_palette(db, id, user.id)
     return {"status": "palette deleted successfully"}
 
 
-@app.get("/api/color", dependencies=[Depends(JWTBearer())], tags=["Color"])
+@app.get("/api/colors", dependencies=[Depends(JWTBearer())], tags=["Color"])
 async def get_colors(cred=Depends(JWTBearer()), db=Depends(get_db)):
     user = await crud.get_current_user(cred, db)
     if user is None:
         return {"error": "something wrong"}
 
-    db_colors = await crud.get_colors(db, user.id)
-    colors = list(map(lambda db_c: ColorSchema(id=db_c.id, name=db_c.name, hex=db_c.hex), db_colors))
+    colors = await crud.get_colors(db, user.id)
 
     return colors
 
@@ -59,11 +58,11 @@ async def add_color(color_data: ColorSchema,
 
 
 @app.delete("/api/color/delete", dependencies=[Depends(JWTBearer())], tags=["Color"])
-async def delete_color(color_data: ColorSchema,
+async def delete_color(id: int,
                        cred=Depends(JWTBearer()),
                        db=Depends(get_db)):
     user = await crud.get_current_user(cred, db)
-    await crud.delete_color(db, color_data, user.id)
+    await crud.delete_color(db, id, user.id)
     return {"status": "color deleted successfully"}
 
 

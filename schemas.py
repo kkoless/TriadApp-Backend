@@ -17,6 +17,15 @@ class ColorSchema(BaseModel):
         }
 
 
+class ColorResponse:
+    name: str
+    hex: str
+
+    def __init__(self, name, hex):
+        self.name = name
+        self.hex = hex
+
+
 class PaletteSchema(BaseModel):
     id: int
     colors: List[ColorSchema]
@@ -34,6 +43,13 @@ class PaletteSchema(BaseModel):
                 ]
             }
         }
+
+
+class PaletteResponse:
+    colors: List[ColorResponse]
+
+    def __init__(self, colors):
+        self.colors = colors
 
 
 class UserAuthSchema(BaseModel):
