@@ -37,6 +37,16 @@ async def delete_palette(id: int,
     return {"status": "palette deleted successfully"}
 
 
+@app.post("/api/palette/update", dependencies=[Depends(JWTBearer())], tags=["Palette"])
+async def update_palette(id: int,
+                         new_palette: PaletteSchema,
+                         cred=Depends(JWTBearer()),
+                         db=Depends(get_db)):
+    user = await crud.get_current_user(cred, db)
+    await crud.update_palette(db, palette_id=id, new_palette=new_palette, user_id=user.id)
+    return {"status": "palette deleted successfully"}
+
+
 @app.get("/api/colors", dependencies=[Depends(JWTBearer())], tags=["Color"])
 async def get_colors(cred=Depends(JWTBearer()), db=Depends(get_db)):
     user = await crud.get_current_user(cred, db)

@@ -137,6 +137,14 @@ async def delete_palette(db: Session, palette_id: int, user_id: int):
         return {"error": "This palette does not exist"}
 
 
+async def update_palette(db: Session, palette_id: int, new_palette: PaletteSchema, user_id: int):
+    delete_response = await delete_palette(db, palette_id, user_id)
+    if delete_response is None:
+        add_response = await add_palette(db, new_palette, user_id)
+        if add_response is None:
+            return {"error": "This palette can't be updated"}
+
+
 async def get_colors(db: Session, user_id: int):
     db_colors = db.query(Color) \
         .join(User_Color) \
