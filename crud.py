@@ -60,7 +60,7 @@ async def get_user_by_email(db: Session, email: str):
         .first()
 
 
-async def add_palette(db: Session, palette_data: PaletteSchema, user_id: int):
+async def add_palette(db: Session, palette_data: PaletteSchema, user_id: str):
     db_palette = db.query(Palette).filter(Palette.id == palette_data.id).first()
 
     if db_palette is None:
@@ -77,7 +77,7 @@ async def add_palette(db: Session, palette_data: PaletteSchema, user_id: int):
             db_color = db.query(Color).filter(Color.id == color.id).first()
 
             if db_color is None:
-                db_color = Color(id=color.id, name=color.name, hex=color.hex)
+                db_color = Color(id=color.id, name=color.name, hex=color.hex, alpha=color.alpha)
                 db.add(db_color)
 
             db_palette_color = Palette_Color(palette_id=palette_data.id, color_id=color.id)
@@ -93,7 +93,7 @@ async def add_palette(db: Session, palette_data: PaletteSchema, user_id: int):
         return {"error": "This palette already in use"}
 
 
-async def get_palettes(db: Session, user_id: int):
+async def get_palettes(db: Session, user_id: str):
     response = []
 
     db_palettes = db.query(User_Palette) \
@@ -109,14 +109,14 @@ async def get_palettes(db: Session, user_id: int):
 
         for color in db_colors:
             db_color = db.query(Color).filter(Color.id == color.color_id).first()
-            colors.append(ColorResponse(name=db_color.name, hex=db_color.hex))
+            colors.append(ColorResponse(name=db_color.name, hex=db_color.hex, alpha=db_color.alpha))
 
         response.append(PaletteResponse(colors=colors))
 
     return response
 
 
-async def delete_palette(db: Session, palette_id: int, user_id: int):
+async def delete_palette(db: Session, palette_id: int, user_id: str):
     db_user_palette = db.query(User_Palette) \
         .filter(User_Palette.user_id == user_id) \
         .filter(User_Palette.palette_id == palette_id) \
@@ -137,7 +137,7 @@ async def delete_palette(db: Session, palette_id: int, user_id: int):
         return {"error": "This palette does not exist"}
 
 
-async def update_palette(db: Session, palette_id: int, new_palette: PaletteSchema, user_id: int):
+async def update_palette(db: Session, palette_id: int, new_palette: PaletteSchema, user_id: str):
     delete_response = await delete_palette(db, palette_id, user_id)
     if delete_response is None:
         add_response = await add_palette(db, new_palette, user_id)
@@ -145,18 +145,18 @@ async def update_palette(db: Session, palette_id: int, new_palette: PaletteSchem
             return {"error": "This palette can't be updated"}
 
 
-async def get_colors(db: Session, user_id: int):
+async def get_colors(db: Session, user_id: str):
     db_colors = db.query(Color) \
         .join(User_Color) \
         .filter(User_Color.user_id == user_id) \
         .all()
 
-    colors = list(map(lambda db_c: ColorResponse(name=db_c.name, hex=db_c.hex), db_colors))
+    colors = list(map(lambda db_c: ColorResponse(name=db_c.name, hex=db_c.hex, alpha=db_c.alpha), db_colors))
 
     return colors
 
 
-async def add_color(db: Session, color_data: ColorSchema, user_id: int):
+async def add_color(db: Session, color_data: ColorSchema, user_id: str):
     db_color = db.query(Color) \
         .filter(Color.id == color_data.id) \
         .first()
@@ -165,7 +165,8 @@ async def add_color(db: Session, color_data: ColorSchema, user_id: int):
         db_color = Color(
             id=color_data.id,
             name=color_data.name,
-            hex=color_data.hex
+            hex=color_data.hex,
+            alpha=color_data.alpha
         )
         db.add(db_color)
 

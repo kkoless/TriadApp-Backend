@@ -6,13 +6,15 @@ class ColorSchema(BaseModel):
     id: int
     name: str
     hex: str
+    alpha: float
 
     class Config:
         schema_extra = {
             "example": {
                 "id": 0,
                 "name": "white",
-                "hex": "#ffffff"
+                "hex": "#ffffff",
+                "alpha": 1.0
             }
         }
 
@@ -20,10 +22,12 @@ class ColorSchema(BaseModel):
 class ColorResponse:
     name: str
     hex: str
+    alpha: float
 
-    def __init__(self, name, hex):
+    def __init__(self, name, hex, alpha):
         self.name = name
         self.hex = hex
+        self.alpha = alpha
 
 
 class PaletteSchema(BaseModel):
@@ -38,7 +42,8 @@ class PaletteSchema(BaseModel):
                     {
                         "id": 0,
                         "name": "white",
-                        "hex": "#ffffff"
+                        "hex": "#ffffff",
+                        "alpha": 1.0
                     }
                 ]
             }
