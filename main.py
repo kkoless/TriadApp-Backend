@@ -1,10 +1,13 @@
-from fastapi import FastAPI, HTTPException, Depends
+from fastapi import FastAPI, HTTPException, Depends, UploadFile
+from fastapi.responses import Response
 from sqlalchemy.orm import Session
 from auth_bearer import JWTBearer
 from auth_handler import *
 from schemas import *
 from database import *
+from colorReplace import replace_image_colors
 import crud
+import json
 
 app = FastAPI()
 Base.metadata.create_all(bind=engine)
@@ -117,10 +120,10 @@ async def get_current_user(db: Session = Depends(get_db), cred=Depends(JWTBearer
     db_token = await crud.get_token_info(cred, db)
 
     return UserDBResponse(
-            email=db_user.email,
-            role=db_user.role,
-            token_data=TokenData(db_token.access_token, db_token.expire_time)
-        )
+        email=db_user.email,
+        role=db_user.role,
+        token_data=TokenData(db_token.access_token, db_token.expire_time)
+    )
 
 
 @app.get("/api/users", dependencies=[Depends(JWTBearer())], tags=["User"])
@@ -136,3 +139,21 @@ async def get_all_users(db: Session = Depends(get_db)):
         ))
 
     return response
+
+
+@app.post("/api/colorsReplace", tags=["General"])
+async def upload_image_for_replace(file: UploadFile, palette: UploadFile):
+    img_bytes = await file.read()
+    palette_bytes = await palette.read()
+
+    palette_str = palette_bytes.decode("utf-8")  # Decode the bytes to a string
+    palette_dict = json.loads(palette_str)
+    print(palette_dict)
+
+    new_image = replace_image_colors(img_bytes, palette_dict['colors'])
+
+    # set the content type header to "image/jpeg" or "image/png", depending on the image format
+    headers = {"Content-Type": "image/jpeg"}
+
+    # return the image bytes as the response body
+    return Response(content=new_image.getvalue(), headers=headers)
