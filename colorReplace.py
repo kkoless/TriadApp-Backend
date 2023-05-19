@@ -1,20 +1,20 @@
 from PIL import Image, ImageColor
 import numpy as np
-from sklearn.cluster import KMeans
+from sklearn.cluster import MiniBatchKMeans
 import io
+import cv2
 
 
 def get_colors_from_image(image, colors_count):
     byte_stream = io.BytesIO(image)
-    img = Image.open(byte_stream)
+    img = cv2.imdecode(np.frombuffer(byte_stream.read(), np.uint8), cv2.IMREAD_COLOR)
 
-    image_array = np.array(img)
+    # Convert image to numpy array
+    image_array = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
-    # Reshape the array to a 2D array of pixels
+    # Apply MiniBatchKMeans clustering to extract dominant colors
+    kmeans = MiniBatchKMeans(n_clusters=colors_count)
     pixels = image_array.reshape((-1, 3))
-
-    # Apply KMeans clustering to the pixel values to extract the dominant colors
-    kmeans = KMeans(n_clusters=colors_count)
     kmeans.fit(pixels)
     colors = kmeans.cluster_centers_.astype(int)
 
@@ -29,25 +29,27 @@ def replace_image_colors(image, target_colors):
     target_colors = np.array(list(map(lambda color: ImageColor.getrgb(color['hex']), target_colors)), dtype=int)
     print(target_colors)
     from_colors = get_colors_from_image(image, len(target_colors))
+
     # Load image
     byte_stream = io.BytesIO(image)
     img = Image.open(byte_stream)
 
-    for y in range(img.height):
-        for x in range(img.width):
-            try:
-                # Get the original color of the pixel
-                pixel_color = tuple(img.getpixel((x, y)))
+    # Convert image to NumPy array
+    img_array = np.array(img)
 
-                # Find the index of the closest original color
-                color_distances = np.sum((from_colors - pixel_color) ** 2, axis=1)
-                closest_color_index = np.argmin(color_distances)
+    # Get the original colors of all pixels
+    pixel_colors = img_array.reshape((-1, 3))
 
-                # Replace the pixel with the corresponding new color
-                new_color = target_colors[closest_color_index]
-                img.putpixel((x, y), tuple(new_color))
-            except:
-                print("Something wrong")
+    # Find the indices of the closest original colors
+    color_distances = np.sum((from_colors[:, np.newaxis] - pixel_colors) ** 2, axis=2)
+    closest_color_indices = np.argmin(color_distances, axis=0)
+
+    # Replace the pixels with the corresponding new colors
+    new_colors = target_colors[closest_color_indices]
+    img_array = new_colors.reshape(img_array.shape)
+
+    # Convert the NumPy array back to an image
+    img = Image.fromarray(img_array.astype(np.uint8))
 
     img_bytes = io.BytesIO()
     img.save(img_bytes, format='JPEG')
