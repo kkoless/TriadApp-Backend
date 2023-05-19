@@ -8,6 +8,7 @@ from database import *
 from colorReplace import replace_image_colors
 import crud
 import json
+import base64
 
 app = FastAPI()
 Base.metadata.create_all(bind=engine)
@@ -150,10 +151,24 @@ async def upload_image_for_replace(file: UploadFile, palette: UploadFile):
     palette_dict = json.loads(palette_str)
     print(palette_dict)
 
-    new_image = replace_image_colors(img_bytes, palette_dict['colors'])
+    from_colors, new_image = replace_image_colors(img_bytes, palette_dict['colors'])
 
-    # set the content type header to "image/jpeg" or "image/png", depending on the image format
+    # Convert from_colors to a list (if needed)
+    from_colors_list = from_colors.tolist()
+
+    image_base64 = base64.b64encode(new_image.getvalue()).decode("utf-8")
+
+    # Set the content type header to "image/jpeg" or "image/png", depending on the image format
     headers = {"Content-Type": "image/jpeg"}
 
-    # return the image bytes as the response body
-    return Response(content=new_image.getvalue(), headers=headers)
+    # Create the response body as a JSON object
+    response_body = {
+        "image_data": image_base64,
+        "from_colors": from_colors_list
+    }
+
+    # Serialize the response body to JSON
+    response_json = json.dumps(response_body)
+
+    # Return the JSON response
+    return Response(content=response_json, headers=headers)

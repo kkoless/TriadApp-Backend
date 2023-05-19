@@ -27,7 +27,6 @@ def get_colors_from_image(image, colors_count):
 
 def replace_image_colors(image, target_colors):
     target_colors = np.array(list(map(lambda color: ImageColor.getrgb(color['hex']), target_colors)), dtype=int)
-    print(target_colors)
     from_colors = get_colors_from_image(image, len(target_colors))
 
     # Load image
@@ -55,5 +54,5 @@ def replace_image_colors(image, target_colors):
     img.save(img_bytes, format='JPEG')
     img_bytes.seek(0)
 
-    return img_bytes
+    return from_colors, img_bytes
 
